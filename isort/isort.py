@@ -368,7 +368,7 @@ class SortImports(object):
                         output = "{0}{1}({2}{3}{4}{5})".format(
                             line, splitter, self.line_separator, cont_line,
                             "," if self.config['include_trailing_comma'] else "",
-                            self.line_separator if wrap_mode in (
+                            (self.line_separator + self.config['indent']) if wrap_mode in (
                                 settings.WrapModes.VERTICAL_HANGING_INDENT,
                                 settings.WrapModes.VERTICAL_GRID_GROUPED,
                             ) else "")
@@ -532,8 +532,11 @@ class SortImports(object):
                 new_import_statement = formatter(import_start, copy.copy(from_imports),
                                                 dynamic_indent, indent, line_length, comments)
                 lines = new_import_statement.split(self.line_separator)
+        #  if self.config['multi_line_output'] in (settings.WrapModes.VERTICAL_HANGING_INDENT, settings.WrapModes.VERTICAL_GRID_GROUPED) and lines[-1].startswith(')'):
+            #  lines[-1] = "{0}{1}".format(self.config['indent'], lines[-1])
         if import_statement.count(self.line_separator) == 0:
             return self._wrap(import_statement)
+        #  raise RuntimeError(import_statement)
         return import_statement
 
     def _add_formatted_imports(self):
@@ -613,6 +616,7 @@ class SortImports(object):
         elif self._first_comment_index_end != -1 and self._first_comment_index_start <= 2:
             output_at = self._first_comment_index_end
         self.out_lines[output_at:0] = output
+        #  raise RuntimeError(self.out_lines)
 
         imports_tail = output_at + len(output)
         while [character.strip() for character in self.out_lines[imports_tail: imports_tail + 1]] == [""]:
@@ -697,7 +701,7 @@ class SortImports(object):
         return statement
 
     def _output_vertical_hanging_indent(self, statement, imports, white_space, indent, line_length, comments):
-        return "{0}({1}{2}{3}{4}{5}{2})".format(
+        return "{0}({1}{2}{3}{4}{5}{2}{3})".format(
             statement,
             self._add_comments(comments),
             self.line_separator,
@@ -730,11 +734,11 @@ class SortImports(object):
 
     def _output_vertical_grid_grouped(self, statement, imports, white_space, indent, line_length, comments):
         return self._output_vertical_grid_common(statement, imports, white_space, indent, line_length, comments,
-                                                 True) + self.line_separator + ")"
+                                                 True) + self.line_separator + indent + ")"
 
     def _output_vertical_grid_grouped_no_comma(self, statement, imports, white_space, indent, line_length, comments):
         return self._output_vertical_grid_common(statement, imports, white_space, indent, line_length, comments,
-                                                 False) + self.line_separator + ")"
+                                                 False) + self.line_separator + indent + ")"
 
     def _output_noqa(self, statement, imports, white_space, indent, line_length, comments):
         retval = '{0}{1}'.format(statement, ', '.join(imports))
